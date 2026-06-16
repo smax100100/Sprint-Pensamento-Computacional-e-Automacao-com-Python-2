@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChargeGrid Intelligence – GoodWe PoC</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.30.0/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f4f4f5;
+    --bg3: #e4e4e7;
+    --text: #18181b;
+    --text2: #52525b;
+    --text3: #a1a1aa;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.2);
+    --info-bg: #eff6ff;
+    --info-text: #1d4ed8;
+    --success-bg: #f0fdf4;
+    --success-text: #15803d;
+    --warning-bg: #fffbeb;
+    --warning-text: #b45309;
+    --danger-bg: #fef2f2;
+    --danger-text: #b91c1c;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg2); color: var(--text); min-height: 100vh; padding: 24px; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+
+  .hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .logo { width: 36px; height: 36px; background: var(--info-bg); border: 1px solid rgba(29,78,216,.2); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; }
+  .logo i { font-size: 18px; color: var(--info-text); }
+  .hdr-text h1 { font-size: 17px; font-weight: 600; }
+  .hdr-text p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .hdr-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  #clk { font-size: 12px; color: var(--text2); }
+  .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .b-ok { background: var(--success-bg); color: var(--success-text); }
+  .b-warn { background: var(--warning-bg); color: var(--warning-text); }
+  .b-danger { background: var(--danger-bg); color: var(--danger-text); }
+  .b-info { background: var(--info-bg); color: var(--info-text); }
+
+  .alert { background: var(--warning-bg); border: 1px solid rgba(180,83,9,.3); border-radius: var(--radius); padding: 10px 16px; margin-bottom: 16px; font-size: 13px; color: var(--warning-text); display: none; align-items: center; gap: 8px; }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .metric { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+  .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+  .metric-label i { font-size: 14px; }
+  .metric-val { font-size: 24px; font-weight: 600; }
+  .metric-unit { font-size: 12px; color: var(--text2); margin-left: 2px; }
+  .metric-badge { margin-top: 6px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .card-title i { font-size: 15px; }
+  .card-title span { margin-left: auto; font-size: 11px; color: var(--text3); font-weight: 400; }
+
+  .stations { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .station { border: 1px solid var(--border); border-left-width: 3px; border-radius: 0 var(--radius) var(--radius) 0; padding: 10px 12px; }
+  .st-active { border-left-color: #16a34a; }
+  .st-free { border-left-color: #a1a1aa; }
+  .st-maint { border-left-color: #d97706; }
+  .st-throttled { border-left-color: #dc2626; }
+  .st-id { font-size: 11px; color: var(--text3); }
+  .st-status { font-size: 12px; margin: 3px 0; }
+  .st-power { font-size: 20px; font-weight: 600; }
+  .st-user { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .c-green { color: #16a34a; }
+  .c-gray { color: var(--text3); }
+  .c-amber { color: #d97706; }
+  .c-red { color: #dc2626; }
+
+  .session { border-bottom: 1px solid var(--border); padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+  .session:last-child { border-bottom: none; }
+  .sess-name { font-size: 13px; font-weight: 500; }
+  .sess-detail { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .sess-cost { font-size: 15px; font-weight: 600; color: var(--success-text); }
+  .sess-kwh { font-size: 11px; color: var(--text3); text-align: right; }
+
+  .rec { background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; display: flex; gap: 8px; font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .rec:last-child { margin-bottom: 0; }
+  .rec i { color: var(--info-text); font-size: 15px; flex-shrink: 0; padding-top: 1px; }
+  .rec b { color: var(--text); }
+
+  .logic { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-top: 16px; font-family: 'Courier New', monospace; font-size: 12px; color: var(--text2); line-height: 2.2; }
+  .lc { color: var(--info-text); font-weight: 600; }
+  .la { color: var(--success-text); }
+  .lx { color: var(--warning-text); font-weight: 600; }
+
+  .ocpp { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); display: flex; align-items: center; gap: 5px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .d-ok { background: #16a34a; }
+  .d-warn { background: #d97706; }
+
+  .btns { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  button { padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); font-size: 13px; cursor: pointer; color: var(--text); font-family: inherit; }
+  button:hover { background: var(--bg2); }
+
+  .chart-legend { display: flex; gap: 16px; margin-top: 8px; font-size: 11px; color: var(--text2); flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-line { width: 14px; height: 2px; display: inline-block; }
+
+  .sep { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+  .sep-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+
+  @media (max-width: 640px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="logo"><i class="ti ti-bolt"></i></div>
+    <div class="hdr-text">
+      <h1>ChargeGrid Intelligence</h1>
+      <p>GoodWe · Prova de Conceito · Sprint 2</p>
+    </div>
+    <div class="hdr-right">
+      <span id="clk"></span>
+      <span class="badge b-ok" id="sys-badge">Sistema ativo</span>
+    </div>
+  </div>
+
+  <div class="alert" id="throttle-alert">
+    <i class="ti ti-alert-triangle"></i>
+    <span>Throttling automático ativo — potência dos carregadores reduzida para evitar ultrapassagem do limite contratado</span>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label"><i class="ti ti-building"></i>Demanda total</div>
+      <div><span class="metric-val" id="m-tot">—</span><span class="metric-unit">kW</span></div>
+      <div class="metric-badge"><span class="badge" id="m-tot-b">—</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><i class="ti ti-sun"></i>Geração solar</div>
+      <div><span class="metric-val" id="m-sol">—</span><span class="metric-unit">kW</span></div>
+      <div class="metric-badge"><span class="badge b-info" id="m-sol-b">—</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><i class="ti ti-plug"></i>Sessões ativas</div>
+      <div><span class="metric-val" id="m-sess">—</span><span class="metric-unit">VEs</span></div>
+      <div class="metric-badge"><span class="badge b-info">Conectados</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><i class="ti ti-receipt"></i>Faturamento hoje</div>
+      <div><span class="metric-val" id="m-bill">—</span><span class="metric-unit">R$</span></div>
+      <div class="metric-badge"><span class="badge b-ok">RFID automático</span></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-line"></i>Demanda em tempo real<span>Limite: 120 kW</span></div>
+      <div style="position:relative;height:160px">
+        <canvas id="dChart" role="img" aria-label="Gráfico de demanda elétrica em tempo real">Demanda do prédio e VEs em kW</canvas>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item"><span class="legend-line" style="background:#3b82f6"></span>Prédio</div>
+        <div class="legend-item"><span class="legend-line" style="background:#16a34a"></span>VEs</div>
+        <div class="legend-item"><span class="legend-line" style="background:#dc2626;border-top:2px dashed #dc2626;height:0"></span>Limite contratado</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-plug"></i>Pontos de recarga</div>
+      <div class="stations" id="st-grid"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-credit-card"></i>Sessões e tarifação automática</div>
+      <div id="sess-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-cpu"></i>IA preditiva — recomendações</div>
+      <div id="ai-list"></div>
+      <div class="sep">
+        <div class="sep-label">Gateway OCPP</div>
+        <div class="ocpp">
+          <div class="pill"><span class="dot d-ok"></span>OCPP 1.6J</div>
+          <div class="pill"><span class="dot d-ok"></span>SEMS+ API</div>
+          <div class="pill"><span class="dot d-warn"></span>OCPP 2.0.1</div>
+          <div class="pill"><span class="dot d-ok"></span>Billing MW</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="logic">
+    <div><span class="lc">SE</span> demanda_total &gt; 90% × limite_contratado → <span class="la">reduzir potência dos carregadores</span></div>
+    <div><span class="lc">SE</span> excedente_solar &gt; 0 → <span class="la">priorizar recarga com energia fotovoltaica</span></div>
+    <div><span class="lc">SE</span> sessão encerrada ∧ RFID autenticado → <span class="la">calcular custo × tarifa e acionar gateway</span></div>
+    <div id="logic-act"></div>
+  </div>
+
+  <div class="btns">
+    <button onclick="doPeak()">⚡ Simular pico de demanda</button>
+    <button onclick="doDemandDown()">📉 Diminuir demanda</button>
+    <button onclick="doSolar()">☀ Injetar excedente solar</button>
+    <button onclick="doNoSolar()">🌥 Tirar excedente solar</button>
+    <button onclick="doSunny()">🌞 Simular dia ensolarado</button>
+    <button onclick="doCloudy()">⛅ Simular dia nublado</button>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const LIMIT=120,PEAK_T=1.38,OFF_T=0.72;
+let building=65,solarBonus=0,billing=142.60;
+let simulatedHour=null,cloudFactor=1;
+let stations=[
+  {id:'CP-01',user:'RFID: A3F2',status:'active',max:22,cur:22,kwh:8.4,throttled:false},
+  {id:'CP-02',user:'RFID: B7D1',status:'active',max:22,cur:22,kwh:5.1,throttled:false},
+  {id:'CP-03',user:'RFID: C5E9',status:'active',max:11,cur:11,kwh:12.2,throttled:false},
+  {id:'CP-04',user:'',status:'free',max:22,cur:0,kwh:0,throttled:false},
+  {id:'CP-05',user:'',status:'maintenance',max:11,cur:0,kwh:0,throttled:false},
+  {id:'CP-06',user:'RFID: D9K3',status:'active',max:7.4,cur:7.4,kwh:3.7,throttled:false}
+];
+let hist=Array.from({length:12},()=>({b:65+Math.random()*8-4,e:43+Math.random()*4-2}));
+let chart;
+function initChart(){
+  const ctx=document.getElementById('dChart').getContext('2d');
+  chart=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:Array.from({length:12},(_,i)=>'-'+(11-i)*2+'s'),
+      datasets:[
+        {label:'Prédio',data:hist.map(d=>Math.round(d.b)),borderColor:'#3b82f6',tension:0.4,fill:false,pointRadius:2,borderWidth:2},
+        {label:'VEs',data:hist.map(d=>Math.round(d.e)),borderColor:'#16a34a',tension:0.4,fill:false,pointRadius:2,borderWidth:2},
+        {label:'Limite',data:Array(12).fill(LIMIT),borderColor:'#dc2626',borderDash:[5,3],pointRadius:0,borderWidth:1.5,fill:false}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+Math.round(c.raw)+' kW'}}},
+      scales:{
+        y:{min:0,max:140,grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{size:10},callback:v=>v+'kW'}},
+        x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:6}}
+      }
+    }
+  });
+}
+function renderStations(){
+  document.getElementById('st-grid').innerHTML=stations.map(s=>{
+    let cls='station ',st='',pw='';
+    if(s.status==='active'){
+      cls+=s.throttled?'st-throttled':'st-active';
+      st=s.throttled?'<span class="c-red">● Throttled</span>':'<span class="c-green">● Carregando</span>';
+      pw=s.cur.toFixed(1)+' <span style="font-size:12px;color:#71717a">kW</span>';
+    } else if(s.status==='free'){
+      cls+='st-free';st='<span class="c-gray">○ Disponível</span>';pw='<span class="c-gray">—</span>';
+    } else {
+      cls+='st-maint';st='<span class="c-amber">▲ Manutenção</span>';pw='<span class="c-gray">—</span>';
+    }
+    return `<div class="${cls}"><div class="st-id">${s.id}</div><div class="st-status">${st}</div><div class="st-power">${pw}</div><div class="st-user">${s.user||(s.status==='free'?'Aguardando':'Em reparo')}</div></div>`;
+  }).join('');
+}
+function renderSessions(tariff,isPeak){
+  document.getElementById('sess-list').innerHTML=stations.filter(s=>s.status==='active').map(s=>`
+    <div class="session">
+      <div><div class="sess-name">${s.id} · ${s.user}</div><div class="sess-detail">${s.kwh.toFixed(2)} kWh · ${isPeak?'Ponta':'Fora ponta'} R$${tariff.toFixed(2)}/kWh</div></div>
+      <div><div class="sess-cost">R$ ${(s.kwh*tariff).toFixed(2)}</div><div class="sess-kwh">auto-faturado</div></div>
+    </div>`).join('');
+}
+function renderAI(evKW,solKW,bldKW){
+  const excess=Math.max(0,solKW-bldKW),ratio=(bldKW+evKW)/LIMIT,recs=[];
+  if(excess>8) recs.push({i:'ti-sun',t:`<b>Excedente solar disponível:</b> ${excess.toFixed(0)} kW. Inicie recargas pendentes agora para reduzir custo.`});
+  if(ratio>0.85) recs.push({i:'ti-alert-triangle',t:`<b>Atenção — demanda em ${Math.round(ratio*100)}%:</b> agende recargas pesadas para após as 21h (fora ponta).`});
+  else recs.push({i:'ti-clock',t:`<b>Melhor janela amanhã:</b> 10h–15h (pico solar + fora ponta). Redução estimada de 47% no custo.`});
+  recs.push({i:'ti-history',t:`<b>Padrão detectado:</b> frota retorna 17h–19h. Pré-recarga sugerida 13h–16h para evitar horário de ponta.`});
+  document.getElementById('ai-list').innerHTML=recs.map(r=>`<div class="rec"><i class="ti ${r.i}"></i><span>${r.t}</span></div>`).join('');
+}
+function update(){
+  building+=(Math.random()-.5)*5;building=Math.max(48,Math.min(88,building));
+  const bldKW=building;
+  const hr=simulatedHour!==null?simulatedHour:new Date().getHours()+new Date().getMinutes()/60;
+  const solKW=parseFloat((Math.max(0,-0.85*Math.pow(hr-13,2)+32)*cloudFactor+solarBonus).toFixed(1));
+  const active=stations.filter(s=>s.status==='active');
+  const evKW=active.reduce((a,s)=>a+s.cur,0);
+  const tot=bldKW+evKW;
+  const isThrottling=tot>LIMIT*0.9;
+  document.getElementById('throttle-alert').style.display=isThrottling?'flex':'none';
+  if(isThrottling){
+    stations.forEach(s=>{if(s.status==='active'){s.throttled=true;s.cur=parseFloat((s.max*0.55).toFixed(1));}});
+    document.getElementById('sys-badge').textContent='⚠ Throttling ativo';
+    document.getElementById('sys-badge').className='badge b-warn';
+    document.getElementById('logic-act').innerHTML=`<span class="lx">→ ATIVO: throttling aplicado (${Math.round(tot)} kW → ${Math.round(LIMIT*0.9)} kW)</span>`;
+  } else {
+    stations.forEach(s=>{if(s.status==='active'){s.throttled=false;s.cur=s.max;}});
+    document.getElementById('sys-badge').textContent='Sistema ativo';
+    document.getElementById('sys-badge').className='badge b-ok';
+    document.getElementById('logic-act').innerHTML='';
+  }
+  stations.forEach(s=>{if(s.status==='active')s.kwh+=s.cur/3600*2;});
+  const finalEV=stations.filter(s=>s.status==='active').reduce((a,s)=>a+s.cur,0);
+  billing+=finalEV*OFF_T/3600*2*0.08;
+  const finalTot=bldKW+finalEV;
+  document.getElementById('m-tot').textContent=Math.round(finalTot);
+  const ratio=finalTot/LIMIT;
+  const tb=document.getElementById('m-tot-b');
+  if(ratio<0.75){tb.textContent=Math.round(ratio*100)+'% — Normal';tb.className='badge b-ok';}
+  else if(ratio<0.9){tb.textContent=Math.round(ratio*100)+'% — Atenção';tb.className='badge b-warn';}
+  else{tb.textContent=Math.round(ratio*100)+'% — Crítico';tb.className='badge b-danger';}
+  document.getElementById('m-sol').textContent=solKW.toFixed(1);
+  const ex=Math.max(0,solKW-bldKW);
+  document.getElementById('m-sol-b').textContent=ex>0?'+'+ex.toFixed(0)+' kW excedente':'Consumo interno';
+  document.getElementById('m-sess').textContent=active.length;
+  document.getElementById('m-bill').textContent=billing.toFixed(2);
+  hist.push({b:bldKW,e:finalEV});if(hist.length>12)hist.shift();
+  chart.data.datasets[0].data=hist.map(d=>Math.round(d.b));
+  chart.data.datasets[1].data=hist.map(d=>Math.round(d.e));
+  chart.update('none');
+  const realHour=new Date().getHours();
+  const activeHour=simulatedHour!==null?simulatedHour:realHour;
+  const clockLabel=simulatedHour!==null?Math.floor(simulatedHour).toString().padStart(2,'0')+':00 (simulado)':new Date().toLocaleTimeString('pt-BR');
+  document.getElementById('clk').textContent=clockLabel;
+  const isPeak=activeHour>=18&&activeHour<21;
+  renderStations();renderSessions(isPeak?PEAK_T:OFF_T,isPeak);renderAI(finalEV,solKW,bldKW);
+}
+function doPeak(){building=98;solarBonus=0;}
+function doDemandDown(){building=45;}
+function doSolar(){cloudFactor=1;solarBonus+=15;setTimeout(()=>{solarBonus=Math.max(0,solarBonus-15);},10000);}
+function doNoSolar(){solarBonus=0;cloudFactor=1;simulatedHour=null;}
+function doSunny(){simulatedHour=13;cloudFactor=1;solarBonus=0;}
+function doCloudy(){cloudFactor=0;simulatedHour=null;solarBonus=0;}
+initChart();update();setInterval(update,2000);
+</script>
+</body>
+</html>
