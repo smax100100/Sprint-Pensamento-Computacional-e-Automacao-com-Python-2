@@ -9,30 +9,6 @@ Problema resolvido
 Ambientes C&I com múltiplos carregadores de VE enfrentam quatro desafios críticos:
 ProblemaImpactoSobrecarga de demanda elétricaMultas por ultrapassagem do limite contratadoFalta de padronização de protocolosLock-in tecnológico, frotas mistas sem gestão unificadaCobrança manual fragmentadaInconsistências financeiras e perda de receitaUX comprometida do motoristaFilas, falhas de autenticação, falta de visibilidade
 
-Arquitetura do sistema
-
-┌─────────────────────────────────────────────────────────────┐
-│                    ChargeGrid Intelligence                  │
-│                                                             │
-│  ┌──────────┐   API SEMS+    ┌──────────────────────────┐   │
-│  │ GoodWe   │ ──────────── ▶│   Middleware de Software  │  │
-│  │ Inversores│               │                           │  │
-│  │ + EVSE   │                │  ① Controle de Demanda    │  │
-│  └──────────┘                │  ② Gateway OCPP           │  │
-│                              │  ③ Billing Automatizado   │  │
-│  ┌──────────┐                │  ④ IA Preditiva           │  │
-│  │  Solar   │ ──────────── ▶│                           │  │
-│  │  (FV)    │                └──────────┬───────────────┘  │
-│  └──────────┘                         │                    │
-│                                       ▼                    │
-│                           ┌───────────────────┐            │
-│                           │  Dashboard /      │            │
-│                           │  App Motorista /  │            │
-│                           │  Gateway Pagamento│            │
-│                           └───────────────────┘            │
-└─────────────────────────────────────────────────────────────┘
-
-
 Soluções implementadas
 
 1 — Controle de Demanda (Solução Central)
@@ -63,37 +39,6 @@ Geração solar simulada com excedente calculado dinamicamente
 Recomendações da IA atualizadas em tempo real
 Status do Gateway OCPP
 Botões para simular pico de demanda e injeção de solar
-
-Fluxo lógico do sistema
-
-Entrada de dados (SEMS+ API)
-         │
-         ▼
-┌─────────────────┐
-│ Leitura de      │
-│ demanda atual   │──────────────────────────────────────────────────┐
-└────────┬────────┘                                                  │
-         │                                                           │
-         ▼                                                           │
-┌─────────────────┐  Sim    ┌──────────────────────────────────────┐ │
-│ Demanda > 90%   │───────▶│ Throttling: reduzir potência dos VEs│ │
-│ do limite?      │         └──────────────────────────────────────┘ │
-└────────┬────────┘                                                  │
-         │ Não                                                       │
-         ▼                                                           │
-┌─────────────────┐  Sim    ┌──────────────────────────────────────┐ │
-│ Excedente       │───────▶│ Priorizar recarga com solar local    │ │
-│ solar > 0?      │         └──────────────────────────────────────┘ │
-└────────┬────────┘                                                  │
-         │                                                           │
-         ▼                                                           │
-┌─────────────────┐                                                  │
-│ Sessão encerrou │  Sim    ┌──────────────────────────────────────┐ │
-│ + RFID autent.? │───────▶│ Calcular custo e acionar gateway     │ │
-└─────────────────┘         └──────────────────────────────────────┘ │
-                                                                     │
-         ◀───────────────────────────────────────────────────────────┘
-         (loop contínuo a cada 2 segundos)
 
    
 Pensamento computacional aplicado
