@@ -58,4 +58,5 @@ Manoel da Silva Ferreira RM572045
 Links
 
 Vídeo de apresentação Sprint 2:
-Quadro Kanban do projeto:
+
+Quadro Kanban do projeto: https://trello.com/invite/b/6a30a30f51b1309790f90fb6/ATTIa7522cfb7551b424815f4e0b3315b0d86A9C74E5/meu-quadro-do-trello
